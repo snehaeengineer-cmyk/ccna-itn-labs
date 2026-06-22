@@ -67,4 +67,4 @@ show running-config             ! display current config
 show ip interface brief         ! interface status summary
 show ip route                   ! IPv4 routing table
 ```
-# ccna-itn-labs
+
