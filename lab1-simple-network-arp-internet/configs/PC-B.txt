@@ -1,0 +1,27 @@
+! ============================================================
+! DEVICE: PC-B
+! LAB:    ITN Lab 1 — Task 1 (Simple Network)
+! ROLE:   End host on Switch S2
+! ============================================================
+!
+! --- Windows Static IP Configuration ---
+! Run in an elevated (Administrator) command prompt:
+
+netsh interface ip set address name="Local Area Connection" static 192.168.1.11 255.255.255.0
+
+! Verify:
+ipconfig /all
+
+! --- Verify Connectivity ---
+ping 192.168.1.10        ! ping PC-A
+
+! ============================================================
+! Expected Results
+! ============================================================
+!
+! PC-B IP Address  : 192.168.1.11
+! Subnet Mask      : 255.255.255.0
+! Default Gateway  : N/A (no router in Task 1)
+!
+! Ping PC-A (192.168.1.10) should succeed.
+! RTT should be < 1 ms (local switched LAN).

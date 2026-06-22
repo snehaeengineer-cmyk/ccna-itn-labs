@@ -1,0 +1,52 @@
+! ============================================================
+! DEVICE: PC-A
+! LAB:    ITN Lab 3 — Tasks 1, 2 & 3
+! ROLE:   Client PC on S1 LAN; used for Wireshark captures + SSH
+! ============================================================
+
+! ── Task 1: DHCP (Internet access for TCP/UDP/DNS capture) ─
+netsh interface ip set address name="Local Area Connection" dhcp
+netsh interface ip set dns name="Local Area Connection" dhcp
+netsh interface ipv6 set state disabled
+
+! Verify (record IP, MAC, GW, DNS for lab worksheet):
+ipconfig /all
+
+! ── Task 2: Static IPv4 ───────────────────────────────────
+netsh interface ip set address name="Local Area Connection" static 172.30.10.3 255.255.255.0 172.30.10.1
+
+! ── Task 1 — DNS & Wireshark Preparation ──────────────────
+! Flush DNS and ARP caches before capture:
+ipconfig /flushdns
+arp -d *
+
+! nslookup to record web server IP:
+nslookup www.dn.th-koeln.de
+
+! ── Task 2 — Connectivity Tests ───────────────────────────
+ping 172.30.10.1        ! R1 default gateway
+ping 10.1.1.1           ! R1 serial interface
+ping 10.1.1.2           ! R3 serial interface
+ping 172.30.30.1        ! R3 LAN gateway
+ping 172.30.30.3        ! PC-C
+ping 89.101.17.1        ! R3 Loopback 0
+ping 198.133.219.1      ! R3 Loopback 1
+
+! ── Task 3 — SSH to R1 ────────────────────────────────────
+! Use PuTTY:
+!   Host:     172.30.10.1
+!   Port:     22
+!   Type:     SSH
+!   Login:    admin
+!   Password: adminpass
+
+! Verify in R1 console after intentional wrong login:
+!   R1# show login
+! Should show login failure entries and blocking status.
+
+! ── Task 1 — Wireshark Filter Reference ───────────────────
+! Filter TCP only:       tcp
+! Filter DNS only:       dns
+! Filter by TCP stream:  tcp.stream eq 0
+! Filter by host IP:     ip.addr == 139.6.19.7
+! Combine:               tcp.stream eq 0 && ip.addr == 139.6.19.7

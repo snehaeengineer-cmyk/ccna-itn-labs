@@ -1,0 +1,46 @@
+! ============================================================
+! DEVICE: PC-A
+! LAB:    ITN Lab 1 — Task 1 (Simple Network)
+! ROLE:   End host on Switch S1
+! ============================================================
+!
+! --- Windows Static IP Configuration ---
+! Run in an elevated (Administrator) command prompt:
+
+netsh interface ip set address name="Local Area Connection" static 192.168.1.10 255.255.255.0
+
+! Verify:
+ipconfig /all
+
+! --- Verify Connectivity ---
+ping 192.168.1.11        ! ping PC-B
+
+! --- Wireshark: capture and filter ICMP ---
+! Start Wireshark, select the active NIC
+! Apply display filter:  icmp
+! Apply display filter:  arp or icmp
+
+! ============================================================
+! TASK 2 — Switch to DHCP for Internet access
+! ============================================================
+
+netsh interface ip set address name="Local Area Connection" dhcp
+netsh interface ip set dns name="Local Area Connection" dhcp
+
+! Disable IPv6 on the NIC (as required by lab):
+netsh interface ipv6 set state disabled
+
+! Flush ARP cache (administrator shell):
+arp -d *
+
+! Flush DNS cache:
+ipconfig /flushdns
+
+! Ping default gateway (replace x.x.x.x with actual GW from ipconfig):
+ping <default-gateway-ip>
+
+! Traceroute to cisco.com (IPv4 only):
+tracert -4 www.cisco.com
+
+! nslookup for DNS resolution:
+nslookup www.dn.th-koeln.de

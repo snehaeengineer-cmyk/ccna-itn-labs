@@ -1,0 +1,34 @@
+! ============================================================
+! DEVICE: PC-B
+! LAB:    ITN Lab 2
+! ROLE:   End host directly on Router R1 G0/0 (Subnet B)
+! ============================================================
+
+! ── Task 1: Static IPv4 ───────────────────────────────────
+! Windows (elevated command prompt):
+netsh interface ip set address name="Local Area Connection" static 192.168.1.2 255.255.255.0 192.168.1.1
+
+! Verify:
+ipconfig /all
+
+! ── Test connectivity ─────────────────────────────────────
+ping 192.168.1.1        ! ping R1 G0/0 (default gateway)
+ping 192.168.0.1        ! ping R1 G0/1
+ping 192.168.0.3        ! ping PC-A (cross-router)
+
+! ── Task 2: IPv6 SLAAC configuration ─────────────────────
+! PC-B uses SLAAC — no manual IPv6 address needed.
+!
+! Windows: Control Panel → NIC → IPv6 Properties → "Obtain an IPv6 address automatically"
+! (This is the default; just ensure IPv6 is enabled)
+
+! After R1 has ipv6 unicast-routing enabled and sends Router Advertisements:
+ipconfig /all
+! You should see:
+!   Link-local IPv6 : fe80::xxxx:xxxx:xxxx:xxxx (EUI-64 derived)
+!   IPv6 Address    : 2001:db8:acad:a::<EUI-64-suffix>  (SLAAC global unicast)
+!   Default Gateway : fe80::1  (received from R1 RA)
+
+! ── Verification ─────────────────────────────────────────
+ping -6 FE80::1%<interface-index>    ! ping R1 link-local
+tracert 2001:DB8:ACAD:1::ff          ! traceroute to PC-A (should show R1 as hop 1)

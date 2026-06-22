@@ -1,0 +1,105 @@
+! ============================================================
+! DEVICE: R3 (ISR 4321 or similar)
+! LAB:    ITN Lab 3 — Tasks 2 & 3
+! ROLE:   Right-side router; connects PC-C LAN to R1 via serial
+!         Also simulates ISP/remote networks via loopback interfaces
+!
+! NOTE: Adjust interface names to match your hardware.
+! ============================================================
+
+! ── Enter privileged EXEC and configuration mode ──────────
+enable
+configure terminal
+
+! ── Basic settings ────────────────────────────────────────
+hostname R3
+no ip domain-lookup
+enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited. #
+
+! ── Console password ──────────────────────────────────────
+line console 0
+ password cisco
+ login
+ logging synchronous
+ exit
+
+! ── VTY password ──────────────────────────────────────────
+line vty 0 4
+ password cisco
+ login
+ exit
+
+! ── Save basic config ─────────────────────────────────────
+end
+copy running-config startup-config
+configure terminal
+
+! ============================================================
+! TASK 2 — Interface Configuration
+! ============================================================
+
+! G0/0/0 — LAN interface toward PC-C
+interface GigabitEthernet0/0/0
+ description LAN C - Connection to PC-C subnet
+ ip address 172.30.30.1 255.255.255.0
+ no shutdown
+ exit
+
+! S0/1/0 — Serial WAN interface toward R1
+! Check DCE/DTE: show controllers serial <x/y/z>
+! If this interface is DCE, add: clock rate 128000
+interface Serial0/1/0
+ description WAN link to R1 S0/1/1
+ ip address 10.1.1.2 255.255.255.252
+ ! clock rate 128000       ! uncomment ONLY if this interface is DCE
+ no shutdown
+ exit
+
+! Loopback 0 — simulates a remote network (e.g. public subnet)
+interface Loopback0
+ description Simulated remote network Lo0
+ ip address 89.101.17.1 255.255.255.224
+ no shutdown
+ exit
+
+! Loopback 1 — simulates another remote network
+interface Loopback1
+ description Simulated remote network Lo1
+ ip address 198.133.219.1 255.255.255.0
+ no shutdown
+ exit
+
+! ============================================================
+! TASK 2 — Static & Default Routes on R3
+! ============================================================
+
+! Recursive static route to PC-A LAN via R1 serial interface
+ip route 172.30.10.0 255.255.255.0 10.1.1.1
+
+! Default static route via R1 (covers any unknown destination)
+! Using exit interface (directly connected static default):
+ip route 0.0.0.0 0.0.0.0 Serial0/1/0
+
+! The default route allows:
+! - Return traffic from Lo0/Lo1 to PC-A (R3 knows 172.30.10.0 explicitly)
+! - Any other unknown destination forwarded to R1
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+show ip interface brief
+show ip route
+show controllers serial 0/1/0    ! check DCE/DTE
+show running-config
+
+! Test from R3:
+! ping 172.30.10.1    ! R1 G0/0/0
+! ping 172.30.10.3    ! PC-A
+! ping 10.1.1.1       ! R1 serial side

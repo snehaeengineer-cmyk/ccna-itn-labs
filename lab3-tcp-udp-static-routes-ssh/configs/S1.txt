@@ -1,0 +1,92 @@
+! ============================================================
+! DEVICE: S1 (Cisco Catalyst 2960 or similar)
+! LAB:    ITN Lab 3 — Tasks 2 & 3
+! ROLE:   Layer 2 switch connecting PC-A to Router R1
+! ============================================================
+
+! ── Enter privileged EXEC and configuration mode ──────────
+enable
+configure terminal
+
+! ── Basic settings ────────────────────────────────────────
+hostname S1
+no ip domain-lookup
+enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited. #
+
+! ── Console password ──────────────────────────────────────
+line console 0
+ password cisco
+ login
+ logging synchronous
+ exit
+
+! ── VTY (Telnet) password ─────────────────────────────────
+line vty 0 4
+ password cisco
+ login
+ exit
+
+! ── SVI — VLAN 1 management interface ────────────────────
+interface vlan 1
+ ip address 172.30.10.2 255.255.255.0
+ no shutdown
+ exit
+
+ip default-gateway 172.30.10.1
+
+! ── Shut down unused ports (security hardening) ───────────
+! Adjust range to match your switch model and ports in use.
+! Ports in use: Fa0/1 (uplink to R1 G0/1), Fa0/6 (PC-A)
+interface range FastEthernet0/2 - 5
+ shutdown
+ exit
+interface range FastEthernet0/7 - 24
+ shutdown
+ exit
+interface GigabitEthernet0/2
+ shutdown
+ exit
+
+! ============================================================
+! TASK 3 — SSH Configuration on S1
+! ============================================================
+
+! 1. Set domain name
+ip domain-name ccna-lab.com
+
+! 2. Generate RSA key — run interactively:
+!    S1(config)# crypto key generate rsa
+!    → How many bits in the modulus [512]: 1024
+
+! 3. Create local admin user
+username admin privilege 15 secret adminpass
+
+! 4. Restrict VTY to SSH only
+line vty 0 4
+ transport input ssh
+ login local
+ exit
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+show ip interface brief
+show running-config
+
+! Test:
+! From PC-A — Telnet (should be REJECTED after transport input ssh):
+!   telnet 172.30.10.2
+! From PC-A — SSH (should be ACCEPTED):
+!   PuTTY → 172.30.10.2 → Port 22 → SSH → login: admin / adminpass
+
+! show run output for SSH indicators:
+!   ip ssh version 2   (if configured)
+!   transport input ssh  (on vty lines)
+!   username admin privilege 15 secret 5 <hash>

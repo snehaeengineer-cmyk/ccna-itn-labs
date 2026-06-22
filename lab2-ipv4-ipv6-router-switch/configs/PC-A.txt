@@ -1,0 +1,45 @@
+! ============================================================
+! DEVICE: PC-A
+! LAB:    ITN Lab 2
+! ROLE:   End host on Switch S1 (Subnet A)
+! ============================================================
+
+! ── Task 1: Static IPv4 ───────────────────────────────────
+! Windows (elevated command prompt):
+netsh interface ip set address name="Local Area Connection" static 192.168.0.3 255.255.255.0 192.168.0.1
+netsh interface ip set dns name="Local Area Connection" static 8.8.8.8
+
+! Verify:
+ipconfig /all
+
+! Disable IPv6 (as required by lab):
+netsh interface ipv6 set state disabled
+
+! ── Test connectivity ─────────────────────────────────────
+ping 192.168.0.1        ! ping R1 G0/1 (default gateway)
+ping 192.168.1.1        ! ping R1 G0/0
+ping 192.168.1.2        ! ping PC-B (cross-router)
+
+! ── Task 2: IPv6 configuration ────────────────────────────
+! Re-enable IPv6:
+netsh interface ipv6 set state enabled
+
+! Configure global unicast IPv6 address (Windows GUI or PowerShell):
+! Control Panel → Network → NIC → Properties → IPv6 → Manual
+! IPv6 address : 2001:DB8:ACAD:1::ff
+! Prefix length: 64
+! Default GW   : FE80::1
+
+! PowerShell alternative:
+!   $iface = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select -First 1
+!   New-NetIPAddress -InterfaceIndex $iface.ifIndex -IPAddress "2001:DB8:ACAD:1::ff" -PrefixLength 64
+!   Set-NetIPInterface -InterfaceIndex $iface.ifIndex -AddressFamily IPv6 -Router "FE80::1"
+
+! Verify:
+ipconfig /all
+
+! Ping router link-local:
+ping -6 FE80::1%<interface-index>    ! replace <interface-index> from ipconfig output
+
+! Traceroute to PC-B (IPv6):
+tracert -6 2001:DB8:ACAD:A::2        ! PC-B SLAAC address (recorded from PC-B ipconfig)

@@ -1,0 +1,60 @@
+! ============================================================
+! DEVICE: S1 (Cisco Catalyst 2960 or similar)
+! LAB:    ITN Lab 2 — Task 1
+! ROLE:   Layer 2 switch connecting PC-A to Router R1
+!
+! Console access: PuTTY → Serial COM3 → 9600 8N1
+! ============================================================
+
+! ── Enter privileged EXEC and configuration mode ──────────
+enable
+configure terminal
+
+! ── Basic settings ────────────────────────────────────────
+hostname S1
+no ip domain-lookup
+enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited. #
+
+! ── Console password ──────────────────────────────────────
+line console 0
+ password cisco
+ login
+ logging synchronous
+ exit
+
+! ── VTY (Telnet) password ─────────────────────────────────
+line vty 0 4
+ password cisco
+ login
+ exit
+
+! ============================================================
+! Switch Virtual Interface (SVI) — VLAN 1
+! Allows S1 to be reachable by IP (management)
+! ============================================================
+
+interface vlan 1
+ ip address 192.168.0.2 255.255.255.0
+ no shutdown
+ exit
+
+! Default gateway points to R1 G0/1
+ip default-gateway 192.168.0.1
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+show version
+show ip interface brief
+show running-config
+
+! Check if console password is encrypted in config:
+! Should show: password 7 <encrypted-string>  (with service password-encryption)
+! enable secret always stored as MD5: secret 5 <hash>

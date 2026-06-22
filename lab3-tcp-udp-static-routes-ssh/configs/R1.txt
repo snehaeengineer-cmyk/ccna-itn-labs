@@ -1,0 +1,132 @@
+! ============================================================
+! DEVICE: R1 (ISR 4321 or similar)
+! LAB:    ITN Lab 3 — Tasks 2 & 3
+! ROLE:   Left-side router; connects S1 LAN to R3 via serial
+!
+! NOTE: Adjust interface names to match your hardware:
+!   ISR 4321: G0/0/0, G0/0/1, S0/1/0, S0/1/1
+!   ISR 2901: G0/0, G0/1, S0/0/0, S0/0/1
+! ============================================================
+
+! ── Enter privileged EXEC and configuration mode ──────────
+enable
+configure terminal
+
+! ── Basic settings ────────────────────────────────────────
+hostname R1
+no ip domain-lookup
+enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited. #
+
+! ── Console password ──────────────────────────────────────
+line console 0
+ password cisco
+ login
+ logging synchronous
+ exit
+
+! ── VTY password (Telnet — will be replaced by SSH below) ─
+line vty 0 4
+ password cisco
+ login
+ exit
+
+! ── Save basic config ─────────────────────────────────────
+end
+copy running-config startup-config
+configure terminal
+
+! ============================================================
+! TASK 2 — Interface Configuration
+! ============================================================
+
+! G0/0/0 — LAN interface toward S1 and PC-A
+interface GigabitEthernet0/0/0
+ description LAN A - Connection to S1 (PC-A subnet)
+ ip address 172.30.10.1 255.255.255.0
+ no shutdown
+ exit
+
+! S0/1/1 — Serial WAN interface toward R3
+! Check DCE/DTE: show controllers serial <x/y/z>
+! If this interface is DCE, add: clock rate 128000
+interface Serial0/1/1
+ description WAN link to R3 S0/1/0
+ ip address 10.1.1.1 255.255.255.252
+ ! clock rate 128000       ! uncomment ONLY if this interface is DCE
+ no shutdown
+ exit
+
+! ============================================================
+! TASK 2 — Static Routes on R1
+! ============================================================
+
+! Recursive static route to PC-C LAN via R3 serial interface
+ip route 172.30.30.0 255.255.255.0 10.1.1.2
+
+! NOTE: R3 loopback networks (89.101.17.0 and 198.133.219.0)
+! are reachable via the default route below (once configured)
+! or add explicit routes if no default route on R1:
+! ip route 89.101.17.0 255.255.255.224 10.1.1.2
+! ip route 198.133.219.0 255.255.255.0 10.1.1.2
+
+! ============================================================
+! TASK 3 — SSH Configuration
+! ============================================================
+
+! 1. Set domain name
+ip domain-name ccna-lab.com
+
+! 2. Generate RSA crypto key (1024 bits)
+!    NOTE: This is an interactive command — run in exec mode:
+!    R1(config)# crypto key generate rsa
+!    → How many bits in the modulus [512]: 1024
+!
+! (In this file it is shown as a comment because it cannot be
+!  stored as a static config line — must be typed interactively)
+
+! 3. Create local admin user (privilege 15 = full admin rights)
+username admin privilege 15 secret adminpass
+
+! 4. Restrict VTY to SSH only and use local database
+line vty 0 4
+ transport input ssh
+ login local
+ exit
+
+! 5. Force SSH version 2
+ip ssh version 2
+
+! ── Strengthen passwords ──────────────────────────────────
+enable secret Enablep@55
+security passwords min-length 10
+
+! ── Idle timeouts ─────────────────────────────────────────
+line console 0
+ exec-timeout 5 0
+ exit
+line vty 0 4
+ exec-timeout 5 0
+ exit
+
+! ── Brute-force login protection ──────────────────────────
+! Block 60s after 2 failed attempts within 120s
+login block-for 60 attempts 2 within 120
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+show ip interface brief
+show ip route
+show running-config
+show login                  ! check login block status after failed attempts
+
+! From PC-A, connect via SSH:
+!   PuTTY → Host: 172.30.10.1 → Port: 22 → SSH
+!   Login: admin   Password: adminpass

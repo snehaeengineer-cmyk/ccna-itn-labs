@@ -1,0 +1,99 @@
+! ============================================================
+! DEVICE: R1 (ISR 4321 or similar)
+! LAB:    ITN Lab 2 — Task 1 & Task 2
+! ROLE:   Router between Subnet A (PC-A/S1 LAN) and Subnet B (PC-B)
+!
+! NOTE: Interface names shown as G0/0 and G0/1.
+!       ISR 4321 may use G0/0/0 and G0/0/1 — adjust accordingly.
+! ============================================================
+
+! ── Enter privileged EXEC and configuration mode ──────────
+enable
+configure terminal
+
+! ── Basic settings ────────────────────────────────────────
+hostname R1
+no ip domain-lookup
+enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited. #
+
+! ── Console password ──────────────────────────────────────
+line console 0
+ password cisco
+ login
+ logging synchronous
+ exit
+
+! ── VTY (Telnet) password ─────────────────────────────────
+line vty 0 4
+ password cisco
+ login
+ exit
+
+! ============================================================
+! TASK 1 — IPv4 Interface Configuration
+! ============================================================
+
+! Interface G0/1 — connects to Switch S1 (Subnet A: 192.168.0.0/24)
+interface GigabitEthernet0/1
+ description Connection to S1 LAN A (PC-A subnet)
+ ip address 192.168.0.1 255.255.255.0
+ no shutdown
+ exit
+
+! Interface G0/0 — connects directly to PC-B (Subnet B: 192.168.1.0/24)
+interface GigabitEthernet0/0
+ description Connection to PC-B LAN B
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+ exit
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! TASK 2 — IPv6 Interface Configuration
+! ============================================================
+configure terminal
+
+! Enable IPv6 unicast routing (required for router advertisements / SLAAC)
+ipv6 unicast-routing
+
+! G0/0 — PC-B side (SLAAC subnet)
+interface GigabitEthernet0/0
+ ipv6 address 2001:DB8:ACAD:A::1/64
+ ipv6 address FE80::1 link-local
+ no shutdown
+ exit
+
+! G0/1 — S1/PC-A side
+interface GigabitEthernet0/1
+ ipv6 address 2001:DB8:ACAD:1::1/64
+ ipv6 address FE80::1 link-local
+ no shutdown
+ exit
+
+! ── Save ──────────────────────────────────────────────────
+end
+copy running-config startup-config
+
+! ============================================================
+! VERIFICATION COMMANDS
+! ============================================================
+
+! Interface status
+show ip interface brief
+show ipv6 interface brief
+
+! IPv6 detail (check link-local and multicast groups)
+show ipv6 interface GigabitEthernet0/0
+show ipv6 interface GigabitEthernet0/1
+
+! Routing tables
+show ip route
+show ipv6 route
+
+! Hardware/software info
+show version
