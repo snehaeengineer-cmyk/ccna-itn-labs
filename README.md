@@ -1,5 +1,5 @@
 # CCNA ITN Labs — Introduction to Networks
-![CCNA](https://img.shields.io/badge/CCNA-ITN-red)
+![CCNA Progress](https://img.shields.io/badge/CCNA-ITN%20%E2%86%92%20SRWE%20%E2%86%92%20ENSA-blue)
 
 # CCNA ITN Labs — Introduction to Networks
 
