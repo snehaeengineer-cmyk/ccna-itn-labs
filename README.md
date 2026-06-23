@@ -1,4 +1,14 @@
 # CCNA ITN Labs — Introduction to Networks
+![CCNA](https://img.shields.io/badge/CCNA-ITN-red)
+
+# CCNA ITN Labs — Introduction to Networks
+
+![Cisco](https://img.shields.io/badge/Cisco-IOS-blue)
+![IPv4/IPv6](https://img.shields.io/badge/IPv4%2FIPv6-Networking-success)
+![Wireshark](https://img.shields.io/badge/Wireshark-Packet%20Analysis-blue)
+![TCP/UDP](https://img.shields.io/badge/Protocols-TCP%20%26%20UDP-orange)
+![SSH](https://img.shields.io/badge/Security-SSH-purple)
+![Status](https://img.shields.io/badge/Status-Completed-success)
 
 **Course:** Networks and Protocols (NP) — CCNA ITN  
 **Instructor:** Prof. Dr. A. Grebe  
